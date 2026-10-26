@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <Switch
+            android:id="@+id/enabled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/enabled" />
+
+        <EditText android:id="@+id/host" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="@string/host" android:inputType="textUri" android:autofillHints="" />
+        <EditText android:id="@+id/port" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="@string/port" android:inputType="number" android:autofillHints="" />
+        <EditText android:id="@+id/user" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="@string/user" android:inputType="textEmailAddress" android:autofillHints="emailAddress" />
+        <EditText android:id="@+id/password" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="@string/password" android:inputType="textPassword" android:autofillHints="password" />
+        <EditText android:id="@+id/destination" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="@string/destination" android:inputType="textEmailAddress" android:autofillHints="emailAddress" />
+
+        <Button android:id="@+id/save" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/save" />
+        <Button android:id="@+id/test" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/test" />
+        <Button android:id="@+id/battery" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/battery" />
+    </LinearLayout>
+</ScrollView>
