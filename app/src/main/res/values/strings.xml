@@ -11,4 +11,5 @@
     <string name="test">Send test email</string>
     <string name="battery">Battery optimisation settings</string>
     <string name="channel_name">Forwarding errors</string>
+    <string name="error_public">An SMS could not be forwarded</string>
 </resources>

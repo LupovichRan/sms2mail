@@ -34,9 +34,14 @@ Other providers work too, as long as they offer SMTP with STARTTLS (usually port
 ## Privacy
 
 - SMS texts and sender numbers go only to the SMTP server you configure, and from there to your mailbox.
-- Settings, including the app password, are stored on the device with `EncryptedSharedPreferences` (key held in the Android Keystore) and are excluded from backups.
-- No analytics, crash reporting, trackers, or other network calls. Cleartext traffic is disabled.
-- Note that forwarding SMS to email means your one-time codes end up in your mailbox. Protect that mailbox accordingly.
+- The connection requires STARTTLS with TLS 1.2+ and a valid, hostname-matching certificate. Cleartext traffic is disabled.
+- Settings, including the app password, are stored on the device with `EncryptedSharedPreferences` (the key is held in the Android Keystore). The password is never logged or put in WorkManager job data.
+- Until an SMS is sent, its text is queued in WorkManager's private app database. WorkManager prunes it about a day after the job finishes.
+- All app data is excluded from cloud backup and device transfer. The settings screen blocks screenshots, and error notifications are hidden on the lock screen.
+- No analytics, crash reporting, trackers, or other network calls.
+- Forwarding SMS to email means your one-time codes end up in your mailbox. Protect that mailbox accordingly.
+
+See [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ## Android 17: three-hour delay for OTP messages
 
@@ -53,8 +58,17 @@ See [Android 17 behaviour changes](https://developer.android.com/about/versions/
 Requires JDK 17 and the Android SDK (platform 35).
 
 ```sh
-./gradlew testDebugUnitTest assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk
+./gradlew testDebugUnitTest lint assembleDebug assembleRelease
+# Debug APK:   app/build/outputs/apk/debug/app-debug.apk
+# Release APK: app/build/outputs/apk/release/app-release-unsigned.apk (R8-shrunk, unsigned)
+```
+
+Release builds are not signed by Gradle, and the repo contains no keys. Sign them yourself with `apksigner`, using your own keystore kept off shared machines:
+
+```sh
+zipalign -p -f 4 app-release-unsigned.apk app-release-aligned.apk
+apksigner sign --ks /path/to/your.jks --out sms2mail-release.apk app-release-aligned.apk
+apksigner verify --print-certs sms2mail-release.apk
 ```
 
 A GitHub Actions workflow is in [`docs/build-apk.yml`](docs/build-apk.yml). Move it to `.github/workflows/` to enable it.
@@ -65,7 +79,7 @@ A GitHub Actions workflow is in [`docs/build-apk.yml`](docs/build-apk.yml). Move
 
 **הגדרה עם Gmail:** הפעילו אימות דו-שלבי בחשבון Google, צרו סיסמת אפליקציה (App Password) בכתובת <https://myaccount.google.com/apppasswords>, ובאפליקציה הזינו: שרת `smtp.gmail.com`, פורט `587`, כתובת ה-Gmail המלאה כמשתמש, את סיסמת האפליקציה בת 16 התווים, ואת כתובת היעד. לחצו "Send test email", הפעילו את המתג, ופטרו את האפליקציה מאופטימיזציית סוללה.
 
-**פרטיות:** ההודעות נשלחות רק לשרת ה-SMTP שהגדרתם. ההגדרות והסיסמה נשמרות מוצפנות במכשיר ואינן נכללות בגיבוי. אין אנליטיקס ואין תעבורת רשת מלבד SMTP.
+**פרטיות:** ההודעות נשלחות רק לשרת ה-SMTP שהגדרתם, בחיבור מוצפן (STARTTLS חובה, TLS 1.2 ומעלה). ההגדרות והסיסמה נשמרות מוצפנות במכשיר ואינן נכללות בגיבוי. אין אנליטיקס ואין תעבורת רשת מלבד SMTP. לדיווח על חולשת אבטחה ראו SECURITY.md.
 
 **Android 17:** החל מ-Android 17 המערכת מעכבת הודעות SMS שמכילות קוד חד-פעמי (OTP) בשלוש שעות עבור רוב האפליקציות, ולכן הודעות כאלה יועברו למייל רק אחרי שלוש שעות.
 

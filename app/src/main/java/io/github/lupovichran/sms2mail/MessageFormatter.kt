@@ -8,9 +8,12 @@ import java.util.Locale
 /** Pure formatting logic, kept free of Android classes so it can be unit-tested. */
 object MessageFormatter {
     private val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z", Locale.US)
+    private val CONTROL = Regex("[\\p{Cntrl}\\u2028\\u2029]+")
+    const val MAX_SENDER_LENGTH = 64
 
+    /** Sender is attacker-controlled: strip CR/LF and other control chars (header injection) and cap length. */
     fun subject(sender: String?): String {
-        val s = sender?.replace(Regex("[\\r\\n]+"), " ")?.trim().orEmpty()
+        val s = sender?.replace(CONTROL, " ")?.trim()?.take(MAX_SENDER_LENGTH)?.trim().orEmpty()
         return "SMS from ${s.ifEmpty { "unknown" }}"
     }
 

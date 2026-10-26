@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION") // EncryptedSharedPreferences/MasterKey are deprecated upstream but still work.
+
 package io.github.lupovichran.sms2mail
 
 import android.content.Context
@@ -14,12 +16,11 @@ data class SmtpConfig(
     val destination: String,
 ) {
     val isComplete: Boolean
-        get() = host.isNotBlank() && port in 1..65535 && user.isNotBlank() &&
-            password.isNotBlank() && destination.isNotBlank()
+        get() = Validation.isValidHost(host) && Validation.isValidPort(port) && Validation.isValidUser(user) &&
+            Validation.isValidPassword(password) && Validation.isValidEmail(destination)
 }
 
 /** All settings live in EncryptedSharedPreferences (AES-256, key in Android Keystore). */
-@Suppress("DEPRECATION") // EncryptedSharedPreferences is deprecated upstream but still works.
 object Settings {
     const val DEFAULT_HOST = "smtp.gmail.com"
     const val DEFAULT_PORT = 587

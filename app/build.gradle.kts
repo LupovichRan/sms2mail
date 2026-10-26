@@ -17,7 +17,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Signed by the maintainer locally; no signing config or keys in this repo.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {
@@ -25,6 +29,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = true
+        warningsAsErrors = false
+    }
     packaging {
         resources {
             excludes += setOf("META-INF/LICENSE.md", "META-INF/NOTICE.md", "META-INF/*.SF", "META-INF/mailcap.default", "META-INF/mimetypes.default")
@@ -33,7 +42,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("androidx.security:security-crypto:1.1.0")
     implementation("com.sun.mail:android-mail:1.6.7")
     implementation("com.sun.mail:android-activation:1.6.7")

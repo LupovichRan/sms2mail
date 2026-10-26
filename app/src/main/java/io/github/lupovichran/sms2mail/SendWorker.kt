@@ -31,6 +31,9 @@ class SendWorker(context: Context, params: WorkerParameters) : Worker(context, p
         return try {
             Mailer.send(config, subject, body)
             Result.success()
+        } catch (e: IllegalArgumentException) {
+            notifyFailure("Settings invalid; SMS not forwarded: $subject")
+            Result.failure()
         } catch (e: AuthenticationFailedException) {
             notifyFailure("SMTP login failed; check user / app password. Lost: $subject")
             Result.failure()
@@ -52,12 +55,22 @@ class SendWorker(context: Context, params: WorkerParameters) : Worker(context, p
         val nm = ctx.getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(
             NotificationChannel(CHANNEL, ctx.getString(R.string.channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+                .apply { lockscreenVisibility = Notification.VISIBILITY_PRIVATE }
         )
         val n = Notification.Builder(ctx, CHANNEL)
             .setSmallIcon(android.R.drawable.stat_notify_error)
             .setContentTitle(ctx.getString(R.string.app_name))
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
+            // The text names the SMS sender: hide it on the lock screen.
+            .setVisibility(Notification.VISIBILITY_PRIVATE)
+            .setPublicVersion(
+                Notification.Builder(ctx, CHANNEL)
+                    .setSmallIcon(android.R.drawable.stat_notify_error)
+                    .setContentTitle(ctx.getString(R.string.app_name))
+                    .setContentText(ctx.getString(R.string.error_public))
+                    .build()
+            )
             .build()
         nm.notify(id.hashCode(), n)
     }

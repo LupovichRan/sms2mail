@@ -33,4 +33,16 @@ class MessageFormatterTest {
             "קוד: 123456\n\nReceived: 2026-10-26 08:10:00 IST",
             MessageFormatter.body(listOf("קוד: ", null, "123456"), 1_792_995_000_000L, jerusalem),
         )
+
+    @Test fun subjectBlocksHeaderInjection() {
+        val s = MessageFormatter.subject("evil\r\nBcc: victim@example.com\u0000")
+        assertEquals("SMS from evil Bcc: victim@example.com", s)
+        assertEquals(false, s.contains('\r') || s.contains('\n'))
+    }
+
+    @Test fun subjectStripsUnicodeLineSeparators() =
+        assertEquals("SMS from a b", MessageFormatter.subject("a\u2028b"))
+
+    @Test fun subjectCapsSenderLength() =
+        assertEquals("SMS from " + "x".repeat(MessageFormatter.MAX_SENDER_LENGTH), MessageFormatter.subject("x".repeat(500)))
 }

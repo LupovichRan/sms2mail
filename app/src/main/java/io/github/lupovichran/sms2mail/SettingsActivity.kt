@@ -6,10 +6,12 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings as AndroidSettings
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Switch
 import android.widget.Toast
+import java.util.Locale
 
 class SettingsActivity : Activity() {
     private lateinit var enabled: Switch
@@ -21,6 +23,8 @@ class SettingsActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Keep the app password out of screenshots and the recent-apps preview.
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_settings)
         enabled = findViewById(R.id.enabled)
         host = findViewById(R.id.host)
@@ -32,12 +36,15 @@ class SettingsActivity : Activity() {
         val c = Settings.load(this)
         enabled.isChecked = c.enabled
         host.setText(c.host)
-        port.setText(c.port.toString())
+        port.setText(String.format(Locale.ROOT, "%d", c.port))
         user.setText(c.user)
         password.setText(c.password)
         destination.setText(c.destination)
 
-        findViewById<Button>(R.id.save).setOnClickListener { save(); toast("Saved") }
+        findViewById<Button>(R.id.save).setOnClickListener {
+            val c = save()
+            toast(if (c.isComplete) "Saved" else "Saved, but some fields are invalid")
+        }
         findViewById<Button>(R.id.test).setOnClickListener { sendTest() }
         findViewById<Button>(R.id.battery).setOnClickListener {
             startActivity(Intent(AndroidSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
@@ -67,7 +74,7 @@ class SettingsActivity : Activity() {
 
     private fun sendTest() {
         val c = save()
-        if (!c.isComplete) { toast("Fill in all fields first"); return }
+        if (!c.isComplete) { toast("Check host, port, user, password and destination email"); return }
         toast("Sending…")
         Thread {
             val result = try {
@@ -78,7 +85,7 @@ class SettingsActivity : Activity() {
                 )
                 "Test email sent"
             } catch (e: Exception) {
-                "Failed: ${e.message}"
+                "Failed: ${e.javaClass.simpleName}: ${e.message?.take(200)}"
             }
             runOnUiThread { toast(result) }
         }.start()
