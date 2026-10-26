@@ -5,19 +5,34 @@ plugins {
 
 android {
     namespace = "io.github.lupovichran.sms2mail"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.lupovichran.sms2mail"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
+    }
+
+    // Release signing only when CI provides the upload key via environment variables
+    // (see docs/play/SIGNING.md). Locally, bundleRelease/assembleRelease produce unsigned output.
+    val uploadKeystore = System.getenv("SMS2MAIL_UPLOAD_KEYSTORE")
+    if (uploadKeystore != null) {
+        signingConfigs {
+            create("upload") {
+                storeFile = file(uploadKeystore)
+                storeType = "PKCS12"
+                storePassword = System.getenv("SMS2MAIL_UPLOAD_KEY_PASSWORD")
+                keyAlias = "upload"
+                keyPassword = System.getenv("SMS2MAIL_UPLOAD_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
-            // Signed by the maintainer locally; no signing config or keys in this repo.
+            if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
             isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = false
@@ -44,7 +59,7 @@ android {
 dependencies {
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("androidx.security:security-crypto:1.1.0")
-    implementation("com.sun.mail:android-mail:1.6.7")
-    implementation("com.sun.mail:android-activation:1.6.7")
+    implementation("com.sun.mail:android-mail:1.6.8")
+    implementation("com.sun.mail:android-activation:1.6.8")
     testImplementation("junit:junit:4.13.2")
 }

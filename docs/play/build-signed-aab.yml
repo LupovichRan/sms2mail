@@ -1,0 +1,37 @@
+# Builds the release App Bundle signed with the upload key, for upload to Google Play.
+# Move this file to .github/workflows/build-signed-aab.yml to enable it (see docs/play/SIGNING.md).
+# Requires: the upload-key branch (created by upload-key.yml) and the secret SMS2MAIL_UPLOAD_KEY_PASSWORD.
+name: Build signed AAB
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Fetch the upload key
+        run: |
+          git fetch --depth=1 origin upload-key
+          git show origin/upload-key:upload-key.p12 > "$RUNNER_TEMP/upload-key.p12"
+      - name: Test, lint and build the signed bundle
+        env:
+          SMS2MAIL_UPLOAD_KEYSTORE: ${{ runner.temp }}/upload-key.p12
+          SMS2MAIL_UPLOAD_KEY_PASSWORD: ${{ secrets.SMS2MAIL_UPLOAD_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon testDebugUnitTest lint bundleRelease
+      - name: Check the signature
+        run: |
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab
+          rm -f "$RUNNER_TEMP/upload-key.p12"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sms2mail-release-aab
+          path: app/build/outputs/bundle/release/app-release.aab

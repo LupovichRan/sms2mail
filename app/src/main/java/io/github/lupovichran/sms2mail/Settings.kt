@@ -36,10 +36,16 @@ object Settings {
         )
     }
 
+    fun isDisclosureAccepted(context: Context) = prefs(context).getBoolean("disclosure_accepted", false)
+
+    fun setDisclosureAccepted(context: Context, accepted: Boolean) {
+        prefs(context).edit().putBoolean("disclosure_accepted", accepted).apply()
+    }
+
     fun load(context: Context): SmtpConfig {
         val p = prefs(context)
         return SmtpConfig(
-            enabled = p.getBoolean("enabled", false),
+            enabled = p.getBoolean("enabled", false) && p.getBoolean("disclosure_accepted", false),
             host = p.getString("host", DEFAULT_HOST) ?: DEFAULT_HOST,
             port = p.getInt("port", DEFAULT_PORT),
             user = p.getString("user", "").orEmpty(),

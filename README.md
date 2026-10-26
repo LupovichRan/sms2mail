@@ -48,14 +48,14 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
 Starting with Android 17, Android withholds SMS messages that contain one-time passwords (OTP) from most apps for **three hours** after they arrive, to stop OTP hijacking. During the delay the `SMS_RECEIVED` broadcast is not delivered, so SMS2Mail forwards these messages only after three hours.
 
 - Messages in the WebOTP and SMS Retriever formats are delayed for all apps.
-- Ordinary OTP messages are delayed for apps that target API 37 or higher. SMS2Mail currently targets API 35, so they are not affected yet.
+- Ordinary OTP messages are delayed for apps that target API 37 or higher. SMS2Mail targets API 36, so they are not affected yet.
 - Only exempt apps (default SMS app, assistant, connected-device companions, system and carrier apps) get them immediately.
 
 See [Android 17 behaviour changes](https://developer.android.com/about/versions/17/behavior-changes-all#sms-otp-protection).
 
 ## Build
 
-Requires JDK 17 and the Android SDK (platform 35).
+Requires JDK 17 and the Android SDK (platform 36).
 
 ```sh
 ./gradlew testDebugUnitTest lint assembleDebug assembleRelease
@@ -63,7 +63,7 @@ Requires JDK 17 and the Android SDK (platform 35).
 # Release APK: app/build/outputs/apk/release/app-release-unsigned.apk (R8-shrunk, unsigned)
 ```
 
-Release builds are not signed by Gradle, and the repo contains no keys. Sign them yourself with `apksigner`, using your own keystore kept off shared machines:
+Local release builds are unsigned and the repo contains no keys (for Google Play signing in CI see [docs/play/SIGNING.md](docs/play/SIGNING.md)). Sign them yourself with `apksigner`, using your own keystore kept off shared machines:
 
 ```sh
 zipalign -p -f 4 app-release-unsigned.apk app-release-aligned.apk

@@ -2,6 +2,7 @@ package io.github.lupovichran.sms2mail
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -50,8 +51,23 @@ class SettingsActivity : Activity() {
             startActivity(Intent(AndroidSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
             toast("Choose \"All apps\" > SMS2Mail > Don't optimise")
         }
-        enabled.setOnCheckedChangeListener { _, on -> if (on) requestPermissionsIfNeeded() }
-        requestPermissionsIfNeeded()
+        enabled.setOnCheckedChangeListener { _, on -> if (on) withDisclosure { requestPermissionsIfNeeded() } }
+        if (Settings.isDisclosureAccepted(this)) requestPermissionsIfNeeded()
+    }
+
+    /** Prominent disclosure (Google Play User Data policy): shown before asking for the SMS permission. */
+    private fun withDisclosure(onAccepted: () -> Unit) {
+        if (Settings.isDisclosureAccepted(this)) { onAccepted(); return }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.disclosure_title)
+            .setMessage(R.string.disclosure_text)
+            .setCancelable(false)
+            .setPositiveButton(R.string.disclosure_accept) { _, _ ->
+                Settings.setDisclosureAccepted(this, true)
+                onAccepted()
+            }
+            .setNegativeButton(R.string.disclosure_decline) { _, _ -> enabled.isChecked = false }
+            .show()
     }
 
     private fun requestPermissionsIfNeeded() {

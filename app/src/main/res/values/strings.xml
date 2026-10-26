@@ -12,4 +12,8 @@
     <string name="battery">Battery optimisation settings</string>
     <string name="channel_name">Forwarding errors</string>
     <string name="error_public">An SMS could not be forwarded</string>
+    <string name="disclosure_title">SMS2Mail forwards your SMS</string>
+    <string name="disclosure_text">While forwarding is switched on, SMS2Mail reads the sender and text of every SMS you receive and emails them to the address you enter, through the SMTP server you enter (for example Gmail).\n\nThe messages are not sent anywhere else. The developer does not receive them, and the app has no analytics.\n\nYou can switch forwarding off at any time.</string>
+    <string name="disclosure_accept">Agree and continue</string>
+    <string name="disclosure_decline">No thanks</string>
 </resources>

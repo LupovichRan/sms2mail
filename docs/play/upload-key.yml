@@ -1,0 +1,53 @@
+# Run ONCE to create the Google Play upload key, entirely on a GitHub runner.
+# Move this file to .github/workflows/upload-key.yml to enable it (see docs/play/SIGNING.md).
+#
+# Needs one repository secret: SMS2MAIL_UPLOAD_KEY_PASSWORD (a random password, 32+ characters).
+# The key is written to the orphan branch "upload-key" as a password-protected PKCS12 file
+# (upload-key.p12) together with its public certificate (upload-cert.pem). Without the
+# password the .p12 file is useless; never put the password anywhere except the secret
+# and your own password manager.
+name: Create upload key (run once)
+
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  key:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refuse to replace an existing key
+        run: |
+          if git ls-remote --exit-code --heads origin upload-key; then
+            echo "::error::Branch upload-key already exists. Delete it only if you really want a new key."
+            exit 1
+          fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Generate the key
+        env:
+          PW: ${{ secrets.SMS2MAIL_UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ "${#PW}" -lt 24 ]; then
+            echo "::error::Secret SMS2MAIL_UPLOAD_KEY_PASSWORD is missing or shorter than 24 characters."
+            exit 1
+          fi
+          cd "$RUNNER_TEMP"
+          keytool -genkeypair -storetype PKCS12 -keystore upload-key.p12 -alias upload \
+            -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=SMS2Mail upload key" \
+            -storepass:env PW -keypass:env PW
+          keytool -exportcert -rfc -keystore upload-key.p12 -alias upload -storepass:env PW > upload-cert.pem
+          keytool -list -v -keystore upload-key.p12 -storepass:env PW | grep -E "SHA256:"
+      - name: Save it on the upload-key branch
+        run: |
+          git switch --orphan upload-key
+          cp "$RUNNER_TEMP/upload-key.p12" "$RUNNER_TEMP/upload-cert.pem" .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add upload-key.p12 upload-cert.pem
+          git commit -m "Google Play upload key (password-protected PKCS12)"
+          git push origin upload-key
